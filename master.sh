@@ -44,3 +44,6 @@ kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.1
 curl https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/custom-resources.yaml -O
 
 kubectl create -f custom-resources.yaml
+
+#ohmyzsh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" 
