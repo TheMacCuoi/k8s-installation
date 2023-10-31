@@ -95,36 +95,30 @@ for ((i=0; i<${#IP_ADDRESSES[@]}; i++)); do
     fi
 done
 
-# # Define an array of insecure registry addresses
-# INSECURE_REGISTRIES=("registry.iguidevietnam.com")
+# Define an array of insecure registry addresses
+INSECURE_REGISTRIES=("registry.iguidevietnam.com")
 
-# # Check if the registry is already in the CRI-O configuration
-# if ! grep -q "\[registries.insecure\]" /etc/crio/crio.conf; then
-#     echo "[registries.insecure]" | sudo tee -a /etc/crio/crio.conf
-#     echo "registries = [" | sudo tee -a /etc/crio/crio.conf
-# else
-#     echo "Insecure registry configuration already present in CRI-O."
-# fi
+# Function to check and add an insecure registry
+add_insecure_registry() {
+    local registry=$1
 
-# # Loop through the array and add each insecure registry to CRI-O configuration
-# for registry in "${INSECURE_REGISTRIES[@]}"; do
-#     # Check if the registry is already in the configuration
-#     if ! grep -q "\"$registry\"" /etc/crio/crio.conf; then
-#         echo "Adding insecure registry $registry to CRI-O configuration..."
-#         echo "  \"$registry\"," | sudo tee -a /etc/crio/crio.conf
-#     else
-#         echo "Insecure registry $registry is already configured in CRI-O."
-#     fi
-# done
+    # Check if the registry is already in the CRI-O configuration
+    if grep -q "$registry" /etc/crio/crio.conf; then
+        echo "Insecure registry $registry is already configured in CRI-O."
+    else
+        # Add the insecure registry to CRI-O configuration
+        echo "Adding insecure registry $registry to CRI-O configuration..."
+        echo "[registries.insecure]" | sudo tee -a /etc/crio/crio.conf
+        echo "registries = [\"$registry\"]" | sudo tee -a /etc/crio/crio.conf
 
-# # Close the registries array in the CRI-O configuration
-# if grep -q "\"\]" /etc/crio/crio.conf; then
-#     sed -i '$s/,$//g' /etc/crio/crio.conf
-#     echo "]" | sudo tee -a /etc/crio/crio.conf
-# fi
+        # Restart CRI-O to apply the changes
+        echo "Restarting CRI-O..."
+        sudo systemctl restart crio
 
-# # Restart CRI-O to apply the changes
-# echo "Restarting CRI-O..."
-# sudo systemctl restart crio
+        echo "Insecure registry $registry added to CRI-O."
+}
 
-# echo "Insecure registries added to CRI-O."
+# Loop through the array and add each insecure registry
+for registry in "${INSECURE_REGISTRIES[@]}"; do
+    add_insecure_registry "$registry"
+done
