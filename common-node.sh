@@ -95,30 +95,30 @@ for ((i=0; i<${#IP_ADDRESSES[@]}; i++)); do
     fi
 done
 
-# Define an array of insecure registry addresses
-INSECURE_REGISTRIES=("registry.iguidevietnam.com")
-
-# Function to check and add an insecure registry
-add_insecure_registry() {
-    local registry=$1
-
-    # Check if the registry is already in the CRI-O configuration
-    if grep -q "$registry" /etc/crio/crio.conf; then
-        echo "Insecure registry $registry is already configured in CRI-O."
-    else
-        # Add the insecure registry to CRI-O configuration
-        echo "Adding insecure registry $registry to CRI-O configuration..."
-        echo "[registries.insecure]" | sudo tee -a /etc/crio/crio.conf
-        echo "registries = [\"$registry\"]" | sudo tee -a /etc/crio/crio.conf
-
-        # Restart CRI-O to apply the changes
-        echo "Restarting CRI-O..."
-        sudo systemctl restart crio
-
-        echo "Insecure registry $registry added to CRI-O."
-}
-
-# Loop through the array and add each insecure registry
-for registry in "${INSECURE_REGISTRIES[@]}"; do
-    add_insecure_registry "$registry"
-done
+## Define an array of insecure registry addresses
+#INSECURE_REGISTRIES=("registry.iguidevietnam.com")
+#
+## Function to check and add an insecure registry
+#add_insecure_registry() {
+#    local registry=$1
+#
+#   # Check if the registry is already in the CRI-O configuration
+#    if grep -q "$registry" /etc/crio/crio.conf; then
+#        echo "Insecure registry $registry is already configured in CRI-O."
+#    else
+#        # Add the insecure registry to CRI-O configuration
+#        echo "Adding insecure registry $registry to CRI-O configuration..."
+#        echo "[registries.insecure]" | sudo tee -a /etc/crio/crio.conf
+#        echo "registries = [\"$registry\"]" | sudo tee -a /etc/crio/crio.conf
+#
+#        # Restart CRI-O to apply the changes
+#       echo "Restarting CRI-O..."
+#        sudo systemctl restart crio
+#
+#        echo "Insecure registry $registry added to CRI-O."
+#}
+#
+## Loop through the array and add each insecure registry
+#for registry in "${INSECURE_REGISTRIES[@]}"; do
+#    add_insecure_registry "$registry"
+#done
