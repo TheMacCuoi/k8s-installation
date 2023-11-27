@@ -78,8 +78,8 @@ EOF
 
 # Define arrays for IP addresses and hostnames
 
-IP_ADDRESSES=("172.16.1.16", "172.16.1.5")
-HOSTNAMES=("registry.iguidevietnam.com", "minio.storage.vtc.local")
+IP_ADDRESSES=("")
+HOSTNAMES=("")
 
 # Loop through the arrays and add entries to the hosts file
 for ((i=0; i<${#IP_ADDRESSES[@]}; i++)); do
@@ -97,29 +97,35 @@ for ((i=0; i<${#IP_ADDRESSES[@]}; i++)); do
 done
 
 ## Define an array of insecure registry addresses
-#INSECURE_REGISTRIES=("registry.iguidevietnam.com")
-#
-## Function to check and add an insecure registry
-#add_insecure_registry() {
-#    local registry=$1
-#
-#   # Check if the registry is already in the CRI-O configuration
-#    if grep -q "$registry" /etc/crio/crio.conf; then
-#        echo "Insecure registry $registry is already configured in CRI-O."
-#    else
-#        # Add the insecure registry to CRI-O configuration
-#        echo "Adding insecure registry $registry to CRI-O configuration..."
-#        echo "[registries.insecure]" | sudo tee -a /etc/crio/crio.conf
-#        echo "registries = [\"$registry\"]" | sudo tee -a /etc/crio/crio.conf
-#
-#        # Restart CRI-O to apply the changes
-#       echo "Restarting CRI-O..."
-#        sudo systemctl restart crio
-#
-#        echo "Insecure registry $registry added to CRI-O."
-#}
-#
-## Loop through the array and add each insecure registry
-#for registry in "${INSECURE_REGISTRIES[@]}"; do
-#    add_insecure_registry "$registry"
-#done
+# CRI-O configuration file path
+crio_conf="/etc/crio/crio.conf"
+
+# List of insecure registries
+insecure_registries=("")
+
+# Check if CRI-O configuration file exists
+if [ ! -f "$crio_conf" ]; then
+  echo "CRI-O configuration file not found: $crio_conf"
+  exit 1
+fi
+
+# Check if insecure registry is already configured
+if grep -q "^\\s*insecure_registries\\s*=" "$crio_conf"; then
+  # Check if insecure_registries field exists in [crio.image] section
+  if awk '/\[crio\.image\]/{p=1} p && /insecure_registries/{exit 0} p && /\[.*\]/{exit 1} p' "$crio_conf"; then
+    # Insecure_registries field exists, append the registry URLs to it
+    for registry in "${insecure_registries[@]}"; do
+      sed -i '/\[crio\.image\]/,/[^[]/{/\[crio\.image\]/!b;/insecure_registries/{s/\(\s*insecure_registries\s*+=\s*\[\)\([^]]*\)\(.*\)/\1"\2", "'$registry'",/;t};/\[/{s/\(\[.*\]\)/\1\ninsecure_registries = ["'$registry'"]/;t}}' "$crio_conf"
+    done
+  else
+    # Insecure_registries field doesn't exist, add it to [crio.image] section
+    sed -i '/\[crio\.image\]/,/[^[]/{/\[crio\.image\]/!b;a\insecure_registries = ['$(printf '"%s",' "${insecure_registries[@]}")']' "$crio_conf";b}' "$crio_conf"
+  fi
+
+  # Restart CRI-O to apply the changes
+  sudo systemctl restart crio
+
+  echo "Insecure registries added to $crio_conf. CRI-O restarted."
+else
+  echo "Insecure registry is already configured in $crio_conf."
+fi
