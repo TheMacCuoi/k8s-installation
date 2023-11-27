@@ -9,6 +9,7 @@ set -euxo pipefail
 PUBLIC_IP_ACCESS="true"
 NODENAME=$(hostname -s)
 POD_CIDR="192.168.0.0/16"
+NETWORK_INTERFACE="ens160"
 
 # Pull required images
 
@@ -18,7 +19,7 @@ sudo kubeadm config images pull
 
 if [[ "$PUBLIC_IP_ACCESS" == "false" ]]; then
     
-    MASTER_PRIVATE_IP=$(ip addr show eth0 | awk '/inet / {print $2}' | cut -d/ -f1)
+    MASTER_PRIVATE_IP=$(ip addr show $NETWORK_INTERFACE | awk '/inet / {print $2}' | cut -d/ -f1)
     sudo kubeadm init --apiserver-advertise-address="$MASTER_PRIVATE_IP" --apiserver-cert-extra-sans="$MASTER_PRIVATE_IP" --pod-network-cidr="$POD_CIDR" --node-name "$NODENAME" --ignore-preflight-errors Swap
 
 elif [[ "$PUBLIC_IP_ACCESS" == "true" ]]; then
@@ -47,4 +48,43 @@ curl https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/cu
 kubectl create -f custom-resources.yaml
 
 #ohmyzsh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" 
+echo "Installing Zsh..."
+if [ "$(uname)" == "Darwin" ]; then
+  # macOS
+  brew install zsh
+elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+  # Linux
+  sudo apt-get install zsh
+fi
+
+# Install Oh My Zsh
+echo "Installing Oh My Zsh..."
+sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+# Install Oh My Zsh plugins
+echo "Installing zsh-autosuggestions plugin..."
+git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+
+# Update Zsh configuration to include plugins and set theme
+echo "Updating Zsh configuration..."
+sed -i '/^plugins=(/s/)$/ zsh-autosuggestions kubectl kubectx)/' ~/.zshrc
+sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="agnoster"/' ~/.zshrc
+
+# Add Kubernetes configuration template
+cat <<'EOF' >> ~/.zshrc
+
+# Kubernetes configuration
+export KUBECONFIG=$HOME/.kube/config
+
+# kubectx and kubens configuration
+export FZF_DEFAULT_OPTS='--height 40% --reverse --border'
+source <(kubectl completion zsh)
+source <(kubectx --completion zsh)
+source <(kubens --completion zsh)
+
+# Alias for kubectl
+alias k=kubectl
+complete -F __start_kubectl k
+EOF
+
+echo "Installation complete. Please restart your terminal or log out and log back in."

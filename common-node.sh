@@ -70,15 +70,16 @@ sudo apt-get install -y kubelet="$KUBERNETES_VERSION" kubectl="$KUBERNETES_VERSI
 sudo apt-get update -y
 sudo apt-get install -y jq
 
-# local_ip="$(ip --json addr show eth0 | jq -r '.[0].addr_info[] | select(.family == "inet") | .local')"
-# cat > /etc/default/kubelet << EOF
-# KUBELET_EXTRA_ARGS=--node-ip=$local_ip
-# EOF
+Network_interface=ens160
+local_ip="$(ip --json addr show $Network_interface | jq -r '.[0].addr_info[] | select(.family == "inet") | .local')"
+cat > /etc/default/kubelet << EOF
+KUBELET_EXTRA_ARGS=--node-ip=$local_ip
+EOF
 
 # Define arrays for IP addresses and hostnames
 
-IP_ADDRESSES=("172.16.1.16")
-HOSTNAMES=("registry.iguidevietnam.com")
+IP_ADDRESSES=("172.16.1.16", "172.16.1.5")
+HOSTNAMES=("registry.iguidevietnam.com", "minio.storage.vtc.local")
 
 # Loop through the arrays and add entries to the hosts file
 for ((i=0; i<${#IP_ADDRESSES[@]}; i++)); do
