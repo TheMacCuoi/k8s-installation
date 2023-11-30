@@ -39,13 +39,11 @@ mkdir -p "$HOME"/.kube
 sudo cp -i /etc/kubernetes/admin.conf "$HOME"/.kube/config
 sudo chown "$(id -u)":"$(id -g)" "$HOME"/.kube/config
 
-# Install Claico Network Plugin Network 
+# Install Claico Network Plugin Network for premise
 
-kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/tigera-operator.yaml
+curl https://raw.githubusercontent.com/projectcalico/calico/v3.26.4/manifests/calico.yaml -O
 
-curl https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/custom-resources.yaml -O
-
-kubectl create -f custom-resources.yaml
+kubectl apply -f calico.yaml
 
 #ohmyzsh
 echo "Installing Zsh..."
@@ -57,18 +55,24 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
   sudo apt-get install zsh
 fi
 
-# Install Oh My Zsh
-echo "Installing Oh My Zsh..."
-sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+# # Install Oh My Zsh
+# echo "Installing Oh My Zsh..."
+# (
+#   sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+# )
 
 # Install Oh My Zsh plugins
 echo "Installing zsh-autosuggestions plugin..."
 git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
 
+echo "Installing kubectl plugin..."
+git clone https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh/custom/plugins/kubectl
+
 # Update Zsh configuration to include plugins and set theme
 echo "Updating Zsh configuration..."
 sed -i '/^plugins=(/s/)$/ zsh-autosuggestions kubectl kubectx)/' ~/.zshrc
 sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="agnoster"/' ~/.zshrc
+
 
 # Add Kubernetes configuration template
 cat <<'EOF' >> ~/.zshrc
@@ -79,12 +83,17 @@ export KUBECONFIG=$HOME/.kube/config
 # kubectx and kubens configuration
 export FZF_DEFAULT_OPTS='--height 40% --reverse --border'
 source <(kubectl completion zsh)
-source <(kubectx --completion zsh)
-source <(kubens --completion zsh)
+
 
 # Alias for kubectl
 alias k=kubectl
 complete -F __start_kubectl k
 EOF
+
+# Install Oh My Zsh
+echo "Installing Oh My Zsh..."
+(
+  sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+)
 
 echo "Installation complete. Please restart your terminal or log out and log back in."
