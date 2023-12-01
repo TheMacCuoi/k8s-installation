@@ -55,12 +55,6 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
   sudo apt-get install zsh
 fi
 
-# # Install Oh My Zsh
-# echo "Installing Oh My Zsh..."
-# (
-#   sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-# )
-
 # Install Oh My Zsh plugins
 echo "Installing zsh-autosuggestions plugin..."
 git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
@@ -89,11 +83,5 @@ source <(kubectl completion zsh)
 alias k=kubectl
 complete -F __start_kubectl k
 EOF
-
-# Install Oh My Zsh
-echo "Installing Oh My Zsh..."
-(
-  sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-)
 
 echo "Installation complete. Please restart your terminal or log out and log back in."

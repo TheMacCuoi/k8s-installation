@@ -119,7 +119,7 @@ if grep -q "^\\s*insecure_registries\\s*=" "$crio_conf"; then
     done
   else
     # Insecure_registries field doesn't exist, add it to [crio.image] section
-    sed -i '/\[crio\.image\]/,/[^[]/{/\[crio\.image\]/!b;a\insecure_registries = ['$(printf '"%s",' "${insecure_registries[@]}")']' "$crio_conf";b}' "$crio_conf"
+    sed -i '/\[crio\.image\]/,/[^[]/{/\[crio\.image\]/!b;a\insecure_registries = ['$(printf '"%s",' "${insecure_registries[@]}")']' "$crio_conf";}' "$crio_conf"
   fi
 
   # Restart CRI-O to apply the changes
@@ -128,4 +128,36 @@ if grep -q "^\\s*insecure_registries\\s*=" "$crio_conf"; then
   echo "Insecure registries added to $crio_conf. CRI-O restarted."
 else
   echo "Insecure registry is already configured in $crio_conf."
+fi
+
+#!/bin/bash
+
+# Get the current hostname
+hostname=$(hostname)
+
+# Check if the hostname includes "master"
+if [[ $hostname == *"master"* ]]; then
+    echo "Installing Zsh on a system with 'master' in the hostname."
+    
+    # Install Zsh based on the package manager
+    if command -v apt-get &> /dev/null; then
+        sudo apt-get install -y zsh
+    elif command -v yum &> /dev/null; then
+        sudo yum install -y zsh
+    else
+        echo "Unsupported package manager. Please install Zsh manually."
+        exit 1
+    fi
+
+    # Set Zsh as the default shell
+    chsh -s $(which zsh)
+
+    echo "Zsh installation completed."
+
+    # Install Oh My Zsh
+    echo "Installing Oh My Zsh..."
+    sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+else
+    echo "Hostname does not include 'master'. No action taken."
 fi
