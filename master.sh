@@ -45,16 +45,6 @@ curl https://raw.githubusercontent.com/projectcalico/calico/v3.26.4/manifests/ca
 
 kubectl apply -f calico.yaml
 
-#ohmyzsh
-echo "Installing Zsh..."
-if [ "$(uname)" == "Darwin" ]; then
-  # macOS
-  brew install zsh
-elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-  # Linux
-  sudo apt-get install zsh
-fi
-
 # Install Oh My Zsh plugins
 echo "Installing zsh-autosuggestions plugin..."
 git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
